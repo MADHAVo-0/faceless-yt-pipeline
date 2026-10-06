@@ -5,6 +5,25 @@ PEXELS_KEY = os.environ.get("PEXELS_API_KEY")
 PIXABAY_KEY = os.environ.get("PIXABAY_API_KEY")
 
 
+def fetch_images(query, count=5):
+    """Pixabay first - key issuance is always open there. Pexels is only
+    tried as a bonus if a working key happens to be set."""
+    images = []
+    if PIXABAY_KEY:
+        try:
+            images = fetch_pixabay_images(query, count)
+        except requests.exceptions.RequestException:
+            images = []
+    if not images and PEXELS_KEY:
+        try:
+            images = fetch_pexels_images(query, count)
+        except requests.exceptions.RequestException:
+            images = []
+    if not images:
+        raise RuntimeError(f"No images found for query: {query}")
+    return images
+
+
 def fetch_pexels_images(query, count=5):
     headers = {"Authorization": PEXELS_KEY}
     r = requests.get(
@@ -13,11 +32,7 @@ def fetch_pexels_images(query, count=5):
         headers=headers,
     )
     r.raise_for_status()
-    photos = r.json().get("photos", [])
-    if not photos:
-        # fall back to Pixabay if Pexels has nothing for this query
-        return fetch_pixabay_images(query, count)
-    return [p["src"]["large"] for p in photos]
+    return [p["src"]["large"] for p in r.json().get("photos", [])]
 
 
 def fetch_pixabay_images(query, count=5):
