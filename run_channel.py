@@ -5,7 +5,7 @@ import importlib
 from common.dedup import is_used, mark_used
 from common.script_gen import generate_script
 from common.voiceover import generate_voiceover
-from common.visuals import fetch_pexels_images, download_images
+from common.visuals import fetch_images, download_images
 from common.assemble import assemble_video
 from common.upload import upload_video
 
