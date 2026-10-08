@@ -3,11 +3,10 @@ import os
 import time
 from google import genai
 from google.genai import types
-from google.genai.errors import ServerError
+from google.genai.errors import ServerError, ClientError
 
 client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
-# Tried in order - if the first is overloaded, fall back to the second
 MODEL_CANDIDATES = ["gemini-flash-latest", "gemini-flash-lite-latest"]
 
 
@@ -44,4 +43,11 @@ Respond with ONLY valid JSON in this exact shape, nothing else:
                 print(f"{model_name} busy (attempt {attempt}/{max_retries}), waiting {delay}s...")
                 time.sleep(delay)
                 delay *= 2
+            except ClientError as e:
+                last_error = e
+                if getattr(e, "code", None) == 429:
+                    print("Rate limit hit (429) - waiting 60s for the window to reset...")
+                    time.sleep(60)
+                    continue
+                raise  # other client errors (bad key, bad request) shouldn't be retried
     raise last_error
