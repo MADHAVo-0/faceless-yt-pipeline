@@ -1,16 +1,14 @@
 import json
 import os
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
-genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
-# "gemini-flash-latest" always points at Google's current free-tier Flash
-# model, so this keeps working even after Google retires a specific version.
 MODEL_NAME = "gemini-flash-latest"
 
 
 def generate_script(topic_title, topic_summary, channel_prompt):
-    model = genai.GenerativeModel(MODEL_NAME)
     prompt = f"""{channel_prompt}
 
 Topic: {topic_title}
@@ -24,6 +22,9 @@ Write all three of the following for a YouTube Short:
 Respond with ONLY valid JSON in this exact shape, nothing else:
 {{"script": "...", "title": "...", "description": "..."}}
 """
-    response = model.generate_content(prompt)
-    text = response.text.strip().replace("```json", "").replace("```", "").strip()
-    return json.loads(text)
+    response = client.models.generate_content(
+        model=MODEL_NAME,
+        contents=prompt,
+        config=types.GenerateContentConfig(response_mime_type="application/json"),
+    )
+    return json.loads(response.text)
