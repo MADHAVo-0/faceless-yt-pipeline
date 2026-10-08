@@ -23,7 +23,7 @@ def main(channel_name):
     os.makedirs("output", exist_ok=True)
     audio_path = generate_voiceover(result["script"], channel.CHANNEL_KEY)
 
-    image_urls = fetch_pexels_images(topic["image_query"], count=5)
+    image_urls = fetch_images(topic["image_query"], count=5)
     image_paths = download_images(image_urls)
 
     video_path = assemble_video(image_paths, audio_path)
